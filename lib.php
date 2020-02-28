@@ -22,9 +22,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-//require(__DIR__.'/../../../config.php');
-
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot.'/config.php');
 
 function get_recommendations() {
@@ -66,94 +65,95 @@ function send_metrics() {
     curl_close($ch);
 }
 
-function retrieve_files($recommendations){
+function clean_cache($recommendations) {
+    $redis = new Redis();
+    $redis->connect('127.0.0.1', '6379');
+
+    $allkeys = $redis->keys('*');
+
+    $unnecessarykeys = array_diff($allkeys, $recommendations);
+
+    if ($redis->del($unnecessarykeys) == count($unnecessarykeys)) {
+        echo "All keys cleaned.\xA";
+        return true;
+    }
+
+    echo "There was a problem removing unnecessary files from cache.\xA";
+    return false;
+}
+
+function retrieve_files($recommendations) {
     global $DB;
+
+    $redis = new Redis();
+    $redis->connect('127.0.0.1', '6379');
+
+    $info = $redis->info("MEMORY");
+
+    $usedmemory = $info->used_memory;
+    $memorylimit = get_cache_limit();
+
+    var_dump($memorylimit);
+    var_dump($info->used_memory);
 
     for ($i=0; $i < count($recommendations); $i++) { 
         $id = $recommendations[$i];
-        $fileinfo = $DB->get_record('files', ['id' => $id]);
 
-        var_dump($fileinfo);
+        // Retrieve the file from the Files API.
+        $fs = get_file_storage();
+        $file = $fs->get_file_by_id($id);
+
+        if (!$file) {
+            return "File with id ".$id." not found.\xA"; // The file does not exist.
+        } else {
+            $contents = $file->get_content();
+
+            if (!redis_save_file($id, $contents)) {
+                echo "There was a problem saving file ".$id." in Redis.\xA";
+            } else {
+                echo "File saved in Redis successfully.\xA";
+            }
+        } 
     }
 }
 
-function redis_test($rserver, $rport) {
-  $redis = new Redis();
+function redis_save_file($id, $file) {
+    $rserver = '127.0.0.1';
+    $rport = '6379';
 
-  if ($redis->connect($rserver, $rport)) {
-    $status = $redis->set('testing_file', file_get_contents("/home/yoda/Documentos/anteproyecto_Gustavo.pdf"));
+    $redis = new Redis();
 
-	var_dump($status);
-    // $value = $redis->get('test');
+    if ($redis->connect($rserver, $rport)) {
 
-    // echo $value;
-  } else {
-    echo "Can't connect with Redis";
-  }
-}
+        if ($redis->exists($id)) {
+            echo "File ".$id." is already cached.\xA";
+            return false;
+        } else {
 
-function test() {
-    $url = 'https://obscure-lake-39056.herokuapp.com/api/new-type';
-    $ch = curl_init($url);
+            if (!$redis->set($id, $file)) {
+                return false;
+            }
 
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-    $response = json_decode(curl_exec($ch));
-    curl_close($ch);
-
-    var_dump($response);
-
-    $metrics = array(
-        'success' => 15,
-        'fail' => 2
-    );
-
-    $payload = json_encode(array('metrics' => $metrics));
-
-    $url = 'https://obscure-lake-39056.herokuapp.com/api/get-metrics';
-    $ch = curl_init($url);
-
-    curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
-    curl_setopt( $ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-    $response = json_decode(curl_exec($ch));
-
-    curl_close($ch);
-
-    echo "\xA";
-    var_dump($response);
-    echo "\xA";
-    echo 'Success: ' . $response->success;
-    echo "\xA";
-    echo 'metrics-success: ' . $response->metrics->success;
-    echo "\xA";
-    echo 'metrics-fail: ' . $response->metrics->fail;
-    echo "\xA";
-
-    $url = 'https://obscure-lake-39056.herokuapp.com/api/send-recommendations';
-    $ch = curl_init($url);
-
-    curl_setopt($ch, CURLOPT_HTTPGET, 1);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-    $response = json_decode(curl_exec($ch));
-    $recommendations = $response->recommendations;
-
-    curl_close($ch);   
-
-    if ($response->success) {
-        for ($i=0; $i < count($recommendations); $i++) { 
-            echo $i . ' = ' . $recommendations[$i];
-            echo "\xA";
-        }
-
-        var_dump($response);
-        echo "\xA";
-        echo 'Success: ' . $response->success;
-        echo "\xA";
+            return true;
+        }       
     } else {
-        return 'There was an error retrieving recommendations';
+        echo "Can't connect with Redis.\xA";
+
+        return false;
     }
+}
+
+function get_cache_limit() {
+    $fh = fopen('/proc/meminfo','r');
+    $mem = 0;
+    while ($line = fgets($fh)) {
+        $pieces = array();
+        if (preg_match('/^MemTotal:\s+(\d+)\skB$/', $line, $pieces)) {
+            $mem = $pieces[1];
+            break;
+        }
+    }
+    fclose($fh);
+
+    return ($mem*0.3333)*1024;
 }

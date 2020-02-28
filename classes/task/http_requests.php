@@ -46,6 +46,8 @@ class http_requests extends \core\task\scheduled_task {
         send_metrics();
 
         $recommendations = get_recommendations();
+
+        clean_cache($recommendations);
         retrieve_files($recommendations);
     }
 }

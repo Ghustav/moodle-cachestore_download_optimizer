@@ -1,8 +1,6 @@
 # Download Optimizer #
 
-TODO Describe the plugin shortly here.
-
-TODO Provide more detailed description here.
+Resource download optimizer for Moodle using Redis cache store and an external recommender.
 
 ## License ##
 
