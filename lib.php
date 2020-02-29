@@ -65,7 +65,7 @@ function send_metrics() {
     curl_close($ch);
 }
 
-function clean_cache($recommendations) {
+function clear_cache($recommendations) {
     $redis = new Redis();
     $redis->connect('127.0.0.1', '6379');
 
@@ -90,11 +90,11 @@ function retrieve_files($recommendations) {
 
     $info = $redis->info("MEMORY");
 
-    $usedmemory = $info->used_memory;
+    $usedmemory = $info[used_memory];
     $memorylimit = get_cache_limit();
 
     var_dump($memorylimit);
-    var_dump($info->used_memory);
+    var_dump($usedmemory);
 
     for ($i=0; $i < count($recommendations); $i++) { 
         $id = $recommendations[$i];
@@ -102,15 +102,23 @@ function retrieve_files($recommendations) {
         // Retrieve the file from the Files API.
         $fs = get_file_storage();
         $file = $fs->get_file_by_id($id);
+        $filesize = $file->get_filesize();
 
+        var_dump($filesize);
+
+        if (($usedmemory+$filesize) > $memorylimit) 
+            continue;
+    
         if (!$file) {
-            return "File with id ".$id." not found.\xA"; // The file does not exist.
+            echo "File with id ".$id." not found.\xA"; // The file does not exist.
         } else {
             $contents = $file->get_content();
 
             if (!redis_save_file($id, $contents)) {
                 echo "There was a problem saving file ".$id." in Redis.\xA";
             } else {
+                $usedmemory += $filesize;
+                var_dump($usedmemory);
                 echo "File saved in Redis successfully.\xA";
             }
         } 

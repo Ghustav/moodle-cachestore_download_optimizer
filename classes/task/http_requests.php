@@ -47,7 +47,7 @@ class http_requests extends \core\task\scheduled_task {
 
         $recommendations = get_recommendations();
 
-        clean_cache($recommendations);
+        clear_cache($recommendations);
         retrieve_files($recommendations);
     }
 }
