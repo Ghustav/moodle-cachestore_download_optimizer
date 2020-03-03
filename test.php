@@ -3,9 +3,8 @@
 $redis = new Redis();
 $redis->connect('127.0.0.1', '6379');
 
-$info = $redis->info("MEMORY"); 
-
-var_dump($info);
+var_dump($redis->exists(33));
+var_dump($redis->exists('37'));
 
 /* * *	
 $redis = new Redis();

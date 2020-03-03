@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/config.php');
 
 function get_recommendations() {
-	$url = 'https://obscure-lake-39056.herokuapp.com/api/send-recommendations';
+	$url = 'https://obscure-lake-39056.herokuapp.com/api/send-recommendations-aux';
     $ch = curl_init($url);
 
    	curl_setopt($ch, CURLOPT_HTTPGET, 1);
@@ -125,13 +125,27 @@ function retrieve_files($recommendations) {
     }
 }
 
-function redis_save_file($id, $file) {
-    $rserver = '127.0.0.1';
-    $rport = '6379';
+function serve_file_from_cache(){
+    $redis = new Redis();
+    $redis->connect('127.0.0.1', '6379');
 
+    $str = "Some pseudo-random
+    text spanning
+    multiple lines";
+
+    header('Content-Disposition: attachment; filename="sample.txt"');
+    header('Content-Type: application/force-download');
+    header('Content-Length: ' . strlen($str));
+    header('Connection: close');
+
+
+    echo $str;
+}
+
+function redis_save_file($id, $file) {
     $redis = new Redis();
 
-    if ($redis->connect($rserver, $rport)) {
+    if ($redis->connect('127.0.0.1', '6379')) {
 
         if ($redis->exists($id)) {
             echo "File ".$id." is already cached.\xA";
