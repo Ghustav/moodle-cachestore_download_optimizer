@@ -43,6 +43,8 @@ class http_requests extends \core\task\scheduled_task {
      * Execute the task.
      */
     public function execute() {
+        check_metrics_availability();
+
         send_metrics();
 
         $recommendations = get_recommendations();

@@ -46,15 +46,20 @@ function get_recommendations() {
 }
 
 function send_metrics() {
+    global $DB;
+
     // $csvmetrics = array('15', '2');
 
     // $fp = fopen('metrics.csv', 'w');
     // fputcsv($fp, $csvmetrics);
     // fclose($fp);
 
+    $success = $DB->get_field('download_optimizer_metrics', 'value', ['metric' => 'success']);
+    $fail = $DB->get_field('download_optimizer_metrics', 'value', ['metric' => 'fail']);
+
 	$metrics = array(
-        'success' => 15,
-        'fail' => 2
+        'success' => $success,
+        'fail' => $fail
     );
 
     $payload = json_encode(array('metrics' => $metrics));
@@ -69,6 +74,8 @@ function send_metrics() {
     $response = json_decode(curl_exec($ch));
 
     curl_close($ch);
+
+    clean_metrics_values();
 }
 
 function clear_cache($recommendations) {
@@ -144,6 +151,33 @@ function serve_file_from_cache($id, $filename, $filesize){
     header('Connection: close');
 
     echo $content;
+}
+
+function check_metrics_availability() {
+    global $DB;
+
+    $table = 'download_optimizer_metrics';
+
+    $success = true;
+    $fail = true;
+
+    if (!$DB->record_exists($table, ['metric' => 'success']))
+        $success = $DB->insert_record($table, ['metric' => 'success'], $returnid=true, $bulk=false);
+
+    if (!$DB->record_exists($table, ['metric' => 'fail']))
+        $fail = $DB->insert_record($table, ['metric' => 'fail'], $returnid=true, $bulk=false);
+
+    //var_dump([$success, $fail]);
+}
+
+function clean_metrics_values(){
+    global $DB;
+    $table = 'download_optimizer_metrics';
+
+    $DB->set_field($table, 'value', 0, ['metric' => 'success']);
+    $DB->set_field($table, 'value', 0, ['metric' => 'fail']);
+
+    echo "Metrics values cleaned successfully.\xA";
 }
 
 function redis_save_file($id, $file) {
