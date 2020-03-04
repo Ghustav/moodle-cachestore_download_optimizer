@@ -46,6 +46,12 @@ function get_recommendations() {
 }
 
 function send_metrics() {
+    // $csvmetrics = array('15', '2');
+
+    // $fp = fopen('metrics.csv', 'w');
+    // fputcsv($fp, $csvmetrics);
+    // fclose($fp);
+
 	$metrics = array(
         'success' => 15,
         'fail' => 2
