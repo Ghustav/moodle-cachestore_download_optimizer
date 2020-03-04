@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="cache/stores/download_optimizer/db" VERSION="20200304" COMMENT="XMLDB file for Moodle cache/stores/download_optimizer"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="download_optimizer_metrics" COMMENT="Metrics table for Moodle cachestores_download_optimizer">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="metric" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="empty metric" SEQUENCE="false" COMMENT="Metric name"/>
+        <FIELD NAME="value" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Metric value"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="download_optimizer_logs" COMMENT="Logs table for Moodle cachestores_download_optimizer">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="fileid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Downloaded file id"/>
+        <FIELD NAME="downloadtime" TYPE="int" LENGTH="20" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="File download time"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="foreign" TYPE="foreign" FIELDS="fileid" REFTABLE="files" REFFIELDS="id" COMMENT="Downloaded file id"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>

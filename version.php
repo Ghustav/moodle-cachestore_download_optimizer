@@ -26,6 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'cachestore_download_optimizer';
 $plugin->release = '0.1.0';
-$plugin->version = 2020020501;
+$plugin->version = 2020020503;
 $plugin->requires = 2017051500;
 $plugin->maturity = MATURITY_ALPHA;
