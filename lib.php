@@ -117,7 +117,8 @@ function retrieve_files($recommendations) {
             if (!redis_save_file($id, $contents)) {
                 echo "There was a problem saving file ".$id." in Redis.\xA";
             } else {
-                $usedmemory += $filesize;
+                $info = $redis->info("MEMORY");
+                $usedmemory = $info[used_memory];
                 var_dump($usedmemory);
                 echo "File saved in Redis successfully.\xA";
             }
