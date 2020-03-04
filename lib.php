@@ -125,21 +125,18 @@ function retrieve_files($recommendations) {
     }
 }
 
-function serve_file_from_cache(){
+function serve_file_from_cache($id, $filename, $filesize){
     $redis = new Redis();
     $redis->connect('127.0.0.1', '6379');
 
-    $str = "Some pseudo-random
-    text spanning
-    multiple lines";
+    $content = $redis->get($id);
 
-    header('Content-Disposition: attachment; filename="sample.txt"');
+    header('Content-Disposition: attachment; filename='.$filename);
     header('Content-Type: application/force-download');
-    header('Content-Length: ' . strlen($str));
+    header('Content-Length: ' . $filesize);
     header('Connection: close');
 
-
-    echo $str;
+    echo $content;
 }
 
 function redis_save_file($id, $file) {
