@@ -18,7 +18,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="fileid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Downloaded file id"/>
-        <FIELD NAME="downloadtime" TYPE="int" LENGTH="20" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="File download time"/>
+        <FIELD NAME="downloadtime" TYPE="float" LENGTH="20" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="File download time"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

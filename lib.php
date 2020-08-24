@@ -140,6 +140,8 @@ function retrieve_files($recommendations) {
 }
 
 function serve_file_from_cache($id, $filename, $filesize){
+    $start = microtime(true);
+
     $redis = new Redis();
     $redis->connect('127.0.0.1', '6379');
 
@@ -151,6 +153,18 @@ function serve_file_from_cache($id, $filename, $filesize){
     header('Connection: close');
 
     echo $content;
+
+    $time_elapsed_secs = microtime(true) - $start;
+
+    store_exec_time($time_elapsed_secs, $id);
+}
+
+function store_exec_time($exectime, $id){
+    global $DB;
+
+    $table = 'download_optimizer_logs';
+
+    $result = $DB->insert_record($table, ['fileid' => $id, 'downloadtime' => $exectime], $returnid=true, $bulk=false);
 }
 
 function check_metrics_availability() {
